@@ -1,0 +1,6 @@
+docker build -t ai-prediction-api .
+
+sudo docker run -d     -p 9000:8504     -v $(pwd)/config.json:/app/config.json  --name ai_prediction_api   ai-prediction-api:latest
+
+
+ATTENZIONE THANOS_URL è impostato sul ip del pod che potrebbe cambiare quando il pod cade ! se vuoi usare una cosa stabile metti http://10.152.183.36:9090 oppure fai fare il service a thanos query!!! 

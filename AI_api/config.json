@@ -1,0 +1,10 @@
+
+
+{
+    "thanos_url": "http://10.1.83.73:10902",
+    "training_hours": 48,
+    "input_steps": 60,
+    "output_steps": 20,
+    "query": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode='idle'}[5m])) * 100)",
+    "timegpt_api_key": "nixak-7spOXvdnPw3aU7LLZyEst8S0i6EYRVkMrdlZRLSezs64zyzmRwCTDXHW383IZITjpzu5NbgYdvknJoRX"
+}

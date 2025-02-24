@@ -1,0 +1,5 @@
+docker build -t ai-dashboard .
+docker run -d -p 8501:8501 -v $(pwd)/config.json:/app/config.json --name ai_dashboard ai-dashboard:latest
+
+
+ssh -i Almaviva-TEADAL-Svil.pem -L 8501:localhost:8501 ubuntu@10.205.143.198

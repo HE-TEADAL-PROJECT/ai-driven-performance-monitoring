@@ -1,0 +1,273 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "AI Prediction API: Train & Infer",
+      "description": "Time Series prediction service with local models or TimeGPT",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/train": {
+        "post": {
+          "summary": "Train Model",
+          "description": "Trains one of the available models on historical data from Thanos.\n- query: PromQL Query\n- training_hours: hours of data to fetch\n- input_steps, output_steps: RNN parameters\n- model: \"GRU\", \"LSTM\", \"ARIMA\", \"Prophet\", \"TimeGPT\"\n\nIf model=TimeGPT, nothing is saved locally (TimeGPT does not perform local training).",
+          "operationId": "train_model_train_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TrainResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/infer": {
+        "post": {
+          "summary": "Infer Model",
+          "description": "Performs inference using a previously trained model.\n- query: PromQL Query (last X hours)\n- input_steps, output_steps: RNN parameters\n- model: \"GRU\", \"LSTM\", \"ARIMA\", \"Prophet\", \"TimeGPT\"\n\nIf the model is not present in 'trained_models', it returns an error.",
+          "operationId": "infer_model_infer_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InferRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/InferResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "HTTPValidationError": {
+          "properties": {
+            "detail": {
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "type": "array",
+              "title": "Detail"
+            }
+          },
+          "type": "object",
+          "title": "HTTPValidationError"
+        },
+        "InferRequest": {
+          "properties": {
+            "thanos_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Thanos Url"
+            },
+            "query": {
+              "type": "string",
+              "title": "Query"
+            },
+            "input_steps": {
+              "type": "integer",
+              "title": "Input Steps"
+            },
+            "output_steps": {
+              "type": "integer",
+              "title": "Output Steps"
+            },
+            "model": {
+              "type": "string",
+              "title": "Model"
+            }
+          },
+          "type": "object",
+          "required": [
+            "query",
+            "input_steps",
+            "output_steps",
+            "model"
+          ],
+          "title": "InferRequest"
+        },
+        "InferResponse": {
+          "properties": {
+            "model": {
+              "type": "string",
+              "title": "Model"
+            },
+            "predictions": {
+              "items": {
+                "$ref": "#/components/schemas/PredictionItem"
+              },
+              "type": "array",
+              "title": "Predictions"
+            }
+          },
+          "type": "object",
+          "required": [
+            "model",
+            "predictions"
+          ],
+          "title": "InferResponse"
+        },
+        "PredictionItem": {
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "title": "Timestamp"
+            },
+            "prediction": {
+              "type": "number",
+              "title": "Prediction"
+            }
+          },
+          "type": "object",
+          "required": [
+            "timestamp",
+            "prediction"
+          ],
+          "title": "PredictionItem"
+        },
+        "TrainRequest": {
+          "properties": {
+            "thanos_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Thanos Url"
+            },
+            "query": {
+              "type": "string",
+              "title": "Query"
+            },
+            "training_hours": {
+              "type": "integer",
+              "title": "Training Hours"
+            },
+            "input_steps": {
+              "type": "integer",
+              "title": "Input Steps"
+            },
+            "output_steps": {
+              "type": "integer",
+              "title": "Output Steps"
+            },
+            "model": {
+              "type": "string",
+              "title": "Model"
+            }
+          },
+          "type": "object",
+          "required": [
+            "query",
+            "training_hours",
+            "input_steps",
+            "output_steps",
+            "model"
+          ],
+          "title": "TrainRequest"
+        },
+        "TrainResponse": {
+          "properties": {
+            "message": {
+              "type": "string",
+              "title": "Message"
+            }
+          },
+          "type": "object",
+          "required": [
+            "message"
+          ],
+          "title": "TrainResponse"
+        },
+        "ValidationError": {
+          "properties": {
+            "loc": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array",
+              "title": "Location"
+            },
+            "msg": {
+              "type": "string",
+              "title": "Message"
+            },
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            }
+          },
+          "type": "object",
+          "required": [
+            "loc",
+            "msg",
+            "type"
+          ],
+          "title": "ValidationError"
+        }
+      }
+    }
+  }
