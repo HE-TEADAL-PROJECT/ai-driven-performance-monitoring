@@ -1,0 +1,611 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Prediction API: Train & Infer",
+    "description": "Time Series prediction service with local or ephemeral models + anomaly detection",
+    "version": "1.1.0"
+  },
+  "paths": {
+    "/fetch": {
+      "post": {
+        "summary": "Fetch Endpoint",
+        "operationId": "fetch_endpoint_fetch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FetchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FetchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/train": {
+      "post": {
+        "summary": "Train Model",
+        "description": "Trains local models (GRU, LSTM, ARIMA, Prophet) or ephemeral (TimeGPT, LAGLLAMA).\nSaves local models to `models/`.",
+        "operationId": "train_model_train_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/compute_rmse": {
+      "post": {
+        "summary": "Compute Rmse Endpoint",
+        "description": "Calcola Train e Validation RMSE per i modelli locali richiesti.\n1) Fetch dei dati storici (training_hours).\n2) Split 80/20.\n3) Per GRU/LSTM ricalcola le sequenze su train e val e confronta i pred.\n4) Per ARIMA/Prophet confronta i fitted values e forecast su val.",
+        "operationId": "compute_rmse_endpoint_compute_rmse_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComputeRMSERequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RMSEItem"
+                  },
+                  "type": "array",
+                  "title": "Response Compute Rmse Endpoint Compute Rmse Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/infer": {
+      "post": {
+        "summary": "Infer Model",
+        "description": "Performs inference using a previously trained model (GRU, LSTM, ARIMA, Prophet),\nor ephemeral (TimeGPT, LAGLLAMA).",
+        "operationId": "infer_model_infer_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InferRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InferResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anomaly": {
+      "post": {
+        "summary": "Detect Anomaly",
+        "operationId": "detect_anomaly_anomaly_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnomalyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnomalyItem": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "value"
+        ],
+        "title": "AnomalyItem"
+      },
+      "AnomalyRequest": {
+        "properties": {
+          "thanos_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thanos Url"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "hours": {
+            "type": "integer",
+            "title": "Hours"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence",
+            "default": 95
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "hours",
+          "method"
+        ],
+        "title": "AnomalyRequest"
+      },
+      "AnomalyResponse": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "anomalies": {
+            "items": {
+              "$ref": "#/components/schemas/AnomalyItem"
+            },
+            "type": "array",
+            "title": "Anomalies"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "anomalies"
+        ],
+        "title": "AnomalyResponse"
+      },
+      "ComputeRMSERequest": {
+        "properties": {
+          "thanos_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thanos Url"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "training_hours": {
+            "type": "integer",
+            "title": "Training Hours"
+          },
+          "input_steps": {
+            "type": "integer",
+            "title": "Input Steps"
+          },
+          "output_steps": {
+            "type": "integer",
+            "title": "Output Steps"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Models"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "training_hours",
+          "input_steps",
+          "output_steps",
+          "models"
+        ],
+        "title": "ComputeRMSERequest"
+      },
+      "FetchRequest": {
+        "properties": {
+          "thanos_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thanos Url"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "hours": {
+            "type": "integer",
+            "title": "Hours"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "hours"
+        ],
+        "title": "FetchRequest"
+      },
+      "FetchResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "FetchResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InferRequest": {
+        "properties": {
+          "thanos_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thanos Url"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "training_hours": {
+            "type": "integer",
+            "title": "Training Hours"
+          },
+          "input_steps": {
+            "type": "integer",
+            "title": "Input Steps"
+          },
+          "output_steps": {
+            "type": "integer",
+            "title": "Output Steps"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "training_hours",
+          "input_steps",
+          "output_steps",
+          "model"
+        ],
+        "title": "InferRequest"
+      },
+      "InferResponse": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "predictions": {
+            "items": {
+              "$ref": "#/components/schemas/PredictionItem"
+            },
+            "type": "array",
+            "title": "Predictions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "predictions"
+        ],
+        "title": "InferResponse"
+      },
+      "PredictionItem": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "prediction": {
+            "type": "number",
+            "title": "Prediction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "prediction"
+        ],
+        "title": "PredictionItem"
+      },
+      "RMSEItem": {
+        "properties": {
+          "Model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "Train_RMSE": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Train Rmse"
+          },
+          "Validation_RMSE": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Rmse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "Model",
+          "Train_RMSE",
+          "Validation_RMSE"
+        ],
+        "title": "RMSEItem"
+      },
+      "TrainRequest": {
+        "properties": {
+          "thanos_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thanos Url"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "training_hours": {
+            "type": "integer",
+            "title": "Training Hours"
+          },
+          "input_steps": {
+            "type": "integer",
+            "title": "Input Steps"
+          },
+          "output_steps": {
+            "type": "integer",
+            "title": "Output Steps"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "training_hours",
+          "input_steps",
+          "output_steps",
+          "model"
+        ],
+        "title": "TrainRequest"
+      },
+      "TrainResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "TrainResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
