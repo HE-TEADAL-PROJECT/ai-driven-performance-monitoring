@@ -6,8 +6,10 @@ WORKDIR /app
 
 # Copia i file dell'applicazione
 COPY app.py /app/
+COPY config.json /app/
 COPY requirements.txt /app/
 COPY log.txt /app/
+RUN ls -la /app/
 # Installa le dipendenze
 RUN pip install --no-cache-dir -r requirements.txt
 

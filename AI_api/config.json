@@ -1,7 +1,7 @@
 
 
 {
-    "thanos_url": "http://10.1.83.73:10902",
+    "thanos_url": "http://thanos-query.istio-system.svc.cluster.local:9092",
     "training_hours": 48,
     "input_steps": 60,
     "output_steps": 20,
