@@ -106,7 +106,7 @@ docker run -p 8504:8504 ai-prediction-service
  
 Registry for docker image:
  
-registry.teadal.ubiwhere.com/teadal-public-images/ai-dpm:0.0.4
+https://registry.teadal.ubiwhere.com/teadal-public-images/ai-dpm:0.0.4
  
 Installation note inside TEADAL node cluster with Kustomize:
  
