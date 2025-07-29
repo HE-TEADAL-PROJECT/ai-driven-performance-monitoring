@@ -101,3 +101,13 @@ Build and run using Docker:
 docker build -t ai-prediction-service .
 docker run -p 8504:8504 ai-prediction-service
 ```
+
+### Integration with TEADAL Node
+ 
+Registry for docker image:
+ 
+registry.teadal.ubiwhere.com/teadal-public-images/ai-dpm:0.0.4
+ 
+Installation note inside TEADAL node cluster with Kustomize:
+ 
+https://gitlab.teadal.ubiwhere.com/teadal-tech/teadal.node/-/blob/main/docs/InstallTeadalTools.md?ref_type=heads#AI-DPM
