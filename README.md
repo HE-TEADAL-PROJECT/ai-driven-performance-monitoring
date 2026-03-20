@@ -116,4 +116,4 @@ https://gitlab.teadal.ubiwhere.com/teadal-tech/teadal.node/-/blob/main/docs/Inst
 
 This project is licensed under the Apache License, Version 2.0. For details, see the LICENSE.
 
-https://github.com/HE-TEADAL-PROJECT/ai-driven-performance-monitoring/main/LICENSE
+https://github.com/HE-TEADAL-PROJECT/ai-driven-performance-monitoring/blob/main/LICENSE
